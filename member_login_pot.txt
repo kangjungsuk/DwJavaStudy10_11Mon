@@ -1,0 +1,580 @@
+package javastudy;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+import java.util.concurrent.TimeUnit;
+
+
+
+public class test2 {
+
+	public static void main(String[] args) {
+		
+		member a = new member();
+	}
+
+}
+class member extends Frame implements ActionListener
+{
+	
+	
+	private Dimension dimen, dimen1;//윈도우창 중앙배치 변수.
+	private int xpos, ypos;//윈도우창 중앙배치 변수.
+	
+	Label lbtitle = new Label("[ 회원관리프로그램 ]");
+	Label lbmemNum = new Label("회 원 번 호  :");//회원번호 가입창 라벨.  
+	Label lbName = new Label("성          명  :");
+	Label lbyear = new Label("생  년  월  일:");
+	Label lbjoinShop = new Label("가입승인점포:");
+	Label lbjoinYM = new Label("가  입  일  자 :");
+	Label lbselLavel = new Label("* 등  급  검  색 *");
+	Label lbInuputNum = new Label("회원번호입력:");//회원번호 확인 라벨.
+	Label lbselOk = new Label("검색 대기중..");
+	Label lbAlram = new Label("");
+	Label lbEx1 = new Label("(ex:20020606)");
+	Label lbEx2 = new Label("(ex:20020707)");
+	Label lbEx = new Label("(숫자6자리)");
+	
+	TextField tfmemNum = new TextField(150);
+	TextField tfName = new TextField(50);
+	TextField tfyear = new TextField(50);
+	TextField tfjoinShop = new TextField(50);
+	TextField tfjoinYM = new TextField(50);
+	TextField tfInputNum = new TextField(50);//회원번호 검색창 텍스트필트.
+	TextArea tfVeiw = new TextArea();//Area 여러줄 출력.
+	
+	Button btnAdd = new Button("추가");
+	Button btnCen = new Button("취소");
+	Button btnView = new Button("회원전체보기");
+	Button btnLabSel = new Button("회원검색");
+	Button btnChek  = new Button("중복체크");
+
+	
+	
+	member()
+	{
+		super("회원관리창");
+		this.centerXYSet(); //윈도우창 센터배치를 위해서 메서드로 정리
+		this.init(); //화면구성 메서드호출
+		this.start(); //이벤트및스레드등 호출
+	}
+	
+	void centerXYSet()//윈도우창 센터배치 메서드
+	{
+		this.setSize(600, 550);
+		dimen = Toolkit.getDefaultToolkit().getScreenSize();
+		dimen1 = this.getSize();
+		xpos = (int) (dimen.getWidth() / 2 - dimen1.getWidth() / 2);
+		ypos = (int) (dimen.getHeight() / 2 - dimen1.getHeight() / 2);		
+		this.setLocation(xpos, ypos);
+		this.setVisible(true);
+	}
+	
+	void init()//앱솔루트 셋팅을 위해 null셋팅
+	{
+		this.setLayout(null);
+		Font font = new Font("궁서", Font.BOLD, 20);
+		lbtitle.setBounds(150,50,200,30);this.add(lbtitle);
+		lbtitle.setFont(font);
+		lbmemNum.setBounds(50,100,70,20);this.add(lbmemNum);//회원번호 가입창 라벨.  
+		lbName.setBounds(50,140,70,20);this.add(lbName);
+		lbyear.setBounds(50,180,70,20);this.add(lbyear);
+		lbjoinShop.setBounds(50,220,80,20);this.add(lbjoinShop);
+		lbjoinYM.setBounds(50,260,80,20);this.add(lbjoinYM);
+		lbselLavel.setBounds(350,100,100,20);this.add(lbselLavel);
+		lbInuputNum.setBounds(350,120,80,20);this.add(lbInuputNum);
+		lbselOk.setBounds(350,180,200,100);this.add(lbselOk);
+		lbAlram.setBounds(170,325,150,20);this.add(lbAlram);
+		lbEx.setBounds(50,118,80,20);this.add(lbEx);
+		lbEx1.setBounds(50,195,82,20);this.add(lbEx1);
+		lbEx2.setBounds(50,275,81,20);this.add(lbEx2);
+		
+		tfmemNum.setBounds(140,100,150,20);this.add(tfmemNum);
+		tfName.setBounds(140,140,150,20);this.add(tfName);
+		tfyear.setBounds(140,180,150,20);this.add(tfyear);
+		tfjoinShop.setBounds(140,220,150,20);this.add(tfjoinShop);
+		tfjoinYM.setBounds(140,260,150,20);this.add(tfjoinYM);
+		tfInputNum.setBounds(350,140,100,20);this.add(tfInputNum);//회원번호 검색창 텍스트필트.
+		tfVeiw.setBounds(50,350,280,150);this.add(tfVeiw);
+		
+		btnAdd.setBounds(170,300,50,20);this.add(btnAdd);
+		btnCen.setBounds(240,300,50,20);this.add(btnCen);
+		btnChek.setBounds(292,100,50,20);this.add(btnChek);
+		btnView.setBounds(350,350,80,20);this.add(btnView);
+		btnLabSel.setBounds(350,160,100,20);this.add(btnLabSel);
+	}
+	
+	void start()
+	{		
+		btnAdd.addActionListener(this);
+		btnCen.addActionListener(this);
+		btnView.addActionListener(this);
+		btnLabSel.addActionListener(this);
+		btnChek.addActionListener(this);
+		
+		
+		//윈도우우측상단 X 닫기 활성화
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				System.exit(0);
+			}
+		});
+	}
+	
+	void dialog(String msg)//상태 확인 다이얼로그 창
+	{
+		final Dialog dlg = new Dialog(this, "확인", true);
+		dlg.setLayout(new BorderLayout());		
+		dlg.add("Center", new Label(msg, Label.CENTER));
+		Button bt = new Button("확인");
+		Panel pp = new Panel(new FlowLayout());
+		pp.add(bt);
+		bt.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+			dlg.setVisible(false);
+			}
+		});
+		dlg.add("South", pp);
+		dlg.setSize(300, 100);
+		
+		//다이얼 로그 중앙배치
+		Dimension dimen, dimen1;
+		int xpos, ypos;
+		dimen = Toolkit.getDefaultToolkit().getScreenSize();
+		dimen1 = dlg.getSize();
+		xpos = (int) (dimen.getWidth() / 2 - dimen1.getWidth() / 2);
+		ypos = (int) (dimen.getHeight() / 2 - dimen1.getHeight() / 2);
+		dlg.setLocation(xpos, ypos);
+		
+		
+		dlg.setVisible(true);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		String fmemNum6 = tfmemNum.getText().trim();//중복체크버튼의 6자리 기능.
+		int x6 =0;//중복체크버튼의 6자리 기능.
+		x6 = fmemNum6.trim().length();//중복체크버튼의 6자리 기능.
+		
+		
+		if(e.getSource() == btnAdd) 
+		{
+			String fmemNum = tfmemNum.getText().trim();
+			String name = tfName.getText().trim();
+			String year = tfyear.getText().trim();
+			String joinShop = tfjoinShop.getText().trim();
+			String joinYM = tfjoinYM.getText().trim();
+			
+			try {
+				Class.forName("org.gjt.mm.mysql.Driver");
+			} catch (ClassNotFoundException ee) {
+				System.out.println("드라이브가없음. 체크요망");
+				System.exit(0);
+			}
+			
+			
+			
+			Connection conn = null;
+			String url = "jdbc:mysql://localhost:3306/java?useUnicode=true&characterEncoding=utf8";		
+			String id = "root";
+			String pass = "qwer";
+			
+			Statement stmt = null;
+			ResultSet rs = null;
+			
+			String query = "select * from member";
+			try {
+				conn = DriverManager.getConnection(url, id, pass);
+				stmt = conn.createStatement();
+				rs = stmt.executeQuery(query);
+				while(rs.next()) 
+				{
+					if(fmemNum.equals(rs.getString("memNum")))
+					{
+						lbAlram.setText("동일한 ID가 존재 합니다.");
+						System.out.println("동일한 ID가 존재 합니다.");
+						tfmemNum.setText("");
+						return;
+					}
+			
+				}
+			} 	
+			catch (SQLException ee) 
+				{
+				System.err.println("error = " + ee.toString());
+				}
+			
+			insert(fmemNum,name,year,joinShop,joinYM);
+			//입력하기 위한 메소드 출력.
+			
+			//텍스트 필드 공백예외처리
+			if(fmemNum.equals("")) {
+				lbAlram.setText("회원번호를 입력하시오!"); 
+				dialog("회원번호를 입력하시오!");
+				System.out.println("회원번호를 입력하시오!");
+				return;
+			}
+			
+			if(name.equals(""))
+			{
+				lbAlram.setText("이름을 입력하시오!"); 
+				dialog("이름을 입력하시오!");
+				System.out.println("이름을 입력하시오!");
+				return;
+			
+			}
+			int x = fmemNum.trim().length();
+			if(x != 6) 
+			{
+				tfmemNum.setText("");
+				lbAlram.setText("회원번호6자리입력!");
+				return;
+			}
+			if(year.equals("")) 
+			{
+				lbAlram.setText("생년월일을 입력하시오!"); 
+				dialog("생년월일을 입력하시오!");
+				System.out.println("생년월일을 입력하시오!");
+				return;
+			
+			}
+			if(joinShop.equals("")) 
+			{
+				lbAlram.setText("가입승인점포를 입력하시오."); 
+				dialog("가입승인점포를 입력하시오.");
+				System.out.println("가입승인점포를 입력하시오.");
+				return;
+			
+			}
+			if(joinYM.equals("")) 
+			{
+				lbAlram.setText("가입일자를 입력하시오."); 
+				dialog("가입일자를 입력하시오.");
+				System.out.println("가입일자를 입력하시오.");
+				return;
+			
+			}
+			
+			lbAlram.setText("회원가입이 정상적으로 처리완료."); 
+			dialog("회원가입이 정상적으로 처리완료.");
+			System.out.println("회원가입이 정상적으로 처리완료.");
+			
+			System.out.println("회원번호="+fmemNum);
+			System.out.println("성명="+name);
+			System.out.println("생년월일="+year);
+			System.out.println("가입승인점포="+joinShop);
+			System.out.println("가입일자="+joinYM);
+			
+			
+			
+			}
+		
+		else if(e.getSource()==btnCen)
+		{ System.exit(-1); }
+		
+		else if(e.getSource()==btnChek)
+		{
+			if(tfmemNum.getText().equals(""))
+			{
+				lbAlram.setText("회원번호를 입력하세요.");
+				return;
+				
+			}
+				
+				if(x6 != 6 )// 중복체크 버튼 누를시 확번 더 확인.
+				{
+					tfmemNum.setText("");
+					lbAlram.setText("회원번호6자리입력!");
+					return;
+					
+				}
+			
+		}	
+		else if(e.getSource()== btnView) //전체보기 버튼
+		{ getInfo(); }
+		
+		else if(e.getSource()== btnLabSel) //회원번호 검색
+		{
+			String beegyo = tfInputNum.getText();
+			select(beegyo);
+		}
+			NumCheck(tfmemNum.getText());
+			
+			
+			
+}//버튼 이벤트 끝
+	void select(String beegyo)//회원등급에 관한 메소드.
+	{
+		System.out.println("입력받은회원번호:"+beegyo);//test
+		
+		
+		try {
+			Class.forName("org.gjt.mm.mysql.Driver");
+		} catch (ClassNotFoundException ee) {
+			System.out.println("드라이브가없음. 체크요망");
+			System.exit(0);
+		}
+		
+		Connection conn = null;
+		String url = "jdbc:mysql://localhost:3306/java?useUnicode=true&characterEncoding=utf8";		
+		String id = "root";
+		String pass = "qwer";
+		
+		Statement stmt = null;
+		ResultSet rs = null;
+		String query = "select * from member";
+		try {			
+			conn = DriverManager.getConnection(url, id, pass);
+			
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			
+			while (rs.next()) {				
+				
+				try 
+				{ 
+					
+					
+					System.out.println("db에 회원넘버:"+beegyo);//test
+					
+					SimpleDateFormat format1 = new SimpleDateFormat ( "yyyyMMdd");
+					Date time = new Date();
+					String time1 = format1.format(time);//현재 날짜를 time에 담아 둠.
+				
+					
+					String dbTime = rs.getString(6);//현재 날짜와 비교 할 가입일자.
+					System.out.println("db에 가입일자:"+dbTime);//test
+					String format = "yyyyMMdd"; 
+					SimpleDateFormat sdf = new SimpleDateFormat(format, Locale.ENGLISH); 
+					Date firstDate = sdf.parse(time1); 
+					Date secondDate = sdf.parse(dbTime); long diffInMillies = Math.abs(secondDate.getTime() - firstDate.getTime()); 
+					long diff = TimeUnit.DAYS.convert(diffInMillies, TimeUnit.MILLISECONDS); 
+					System.out.println("diff:"+diff);//test
+					//diff 는 비교+형변환 >> 비교일자
+					
+					
+					if(Integer.parseInt(beegyo) == Integer.parseInt(rs.getString(2)) ) 
+					{//변수명 활용 후 비교가 안되어 Integer.parseInt로 강제 형변환 함.
+						if(diff< 100) 
+						{
+							lbselOk.setText(rs.getString(3)+"님은 실버 회원입니다.");
+						}
+						
+						else if(diff>=100 && diff<199) 
+						{
+							lbselOk.setText(rs.getString(3)+"님은 골드 회원입니다.");
+						}
+						else if(diff>=200) 
+						{
+							lbselOk.setText(rs.getString(3)+"님은 vip 회원입니다.");
+						}
+						return;
+					}
+					
+				}
+				
+				catch (Exception ee) 
+				{ 
+					ee.printStackTrace(); 
+				}
+			
+		
+				
+				}
+				rs.close();
+				stmt.close();
+				conn.close();
+		} 	catch (SQLException ee) {
+			System.err.println("error = " + ee.toString());
+			}
+	}
+	
+	
+	void getInfo()//전체보기 메소드
+	{
+		try {
+			Class.forName("org.gjt.mm.mysql.Driver");
+		} catch (ClassNotFoundException ee) {
+			System.out.println("드라이브가없음. 체크요망");
+			System.exit(0);
+		}
+		
+		
+		
+		Connection conn = null;
+		String url = "jdbc:mysql://localhost:3306/java?useUnicode=true&characterEncoding=utf8";		
+		String id = "root";
+		String pass = "qwer";
+		
+		Statement stmt = null;
+		ResultSet rs = null;
+		String query = "select * from member";
+		try {			
+			conn = DriverManager.getConnection(url, id, pass);
+			
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			
+			String temp = "";
+			
+			while (rs.next()) {				
+//				String a =rs.getString(1)+"/"+rs.getString(2)+"/"+rs.getString(3)+"/"+"\n";
+//				temp = temp + a; //[다른 방법]
+				
+				temp +=rs.getString(1)+"번 :"
+				+rs.getString(2)+"/"
+				+rs.getString(3)+"/"
+				+rs.getString(4)+"/"
+				+rs.getString(5)+"/"
+				+rs.getString(6)+"\n";
+		
+				
+				}
+				
+				System.out.println(temp);
+				tfVeiw.setText(temp);
+				
+				rs.close();
+				stmt.close();
+				conn.close();
+		} catch (SQLException ee) {
+			System.err.println("error = " + ee.toString());
+		}
+	}
+	
+	
+	void NumCheck(String inputNum)//회원번호 중복체크 메소드
+	{
+		try {
+			Class.forName("org.gjt.mm.mysql.Driver");
+		} catch (ClassNotFoundException ee) {
+			System.out.println("드라이브가없음. 체크요망");
+			System.exit(0);
+		}
+		
+		
+		
+		Connection conn = null;
+		String url = "jdbc:mysql://localhost:3306/java?useUnicode=true&characterEncoding=utf8";		
+		String id = "root";
+		String pass = "qwer";
+		
+		Statement stmt = null;
+		ResultSet rs = null;
+		String query = "select * from member";
+		try {			
+			conn = DriverManager.getConnection(url, id, pass);
+			
+			stmt = conn.createStatement();
+			rs = stmt.executeQuery(query);
+			boolean NumCheck = false; //중복체크를 했냐안했냐 체크...
+			while (rs.next()) {				
+				
+				//입력한 회원번화 db회원 번호를 비교.
+				if(inputNum.equals(rs.getString(2)))
+				{
+					lbAlram.setText("동일한 번호가 존재 합니다.");
+					NumCheck =false;
+					break;
+				}
+				
+				if(!inputNum.equals(rs.getString(2)))
+				{
+					lbAlram.setText("가입 가능한 번호 입니다.");
+					NumCheck =true;
+					
+				}
+			}
+			
+			if(NumCheck == true)
+			{
+				btnChek.setEnabled(false);
+				tfmemNum.setEnabled(false);
+			}
+			rs.close();
+			stmt.close();
+			conn.close();
+		} catch (SQLException ee) {
+			System.err.println("error = " + ee.toString());
+		}
+	}
+	
+	
+	//데이타베이스에 접속후 테이블에 삽입.
+	void insert(String fmemNum,String name,String year,String joinShop,String joinYM)
+		{
+			
+			try {
+				Class.forName("org.gjt.mm.mysql.Driver");
+				System.out.println("드라이브가 있습니당~! ^_^v");
+			} catch (ClassNotFoundException ee) {
+				System.out.println("드라이브 없음!!");
+			}
+
+			Connection conn = null;
+			String url = "jdbc:mysql://localhost:3306/java?useUnicode=true&characterEncoding=utf8";		
+			String user = "root";// ID
+			String password = "qwer";// 비밀번호
+			try {
+				conn = (Connection) DriverManager.getConnection(url, user, password);
+				System.out.println("연결되었습니다.");
+			} catch (SQLException ee) {
+				System.err.println("연결객체 생성실패!!");
+			}
+
+			String query = "select * from member";
+			Statement stmt = null;
+			String pquery = "insert into member values (null, ?,?,?,?,?)";
+			PreparedStatement pstmt = null;
+			try {
+				stmt = conn.createStatement();
+				pstmt = conn.prepareStatement(pquery);
+				pstmt.setString(1, fmemNum);
+				pstmt.setString(2, name);
+				pstmt.setString(3, year);
+				pstmt.setString(4, joinShop);
+				pstmt.setString(5, joinYM);
+				
+				pstmt.executeUpdate();
+				System.out.println("실행성공");
+			} catch (SQLException ee) {
+				System.err.println("Query 실행 클래스 생성 에러~!! : " + ee.toString());
+			}
+
+			ResultSet rs = null;
+			try {
+				rs = stmt.executeQuery(query);
+				while (rs.next()) {
+					int num = rs.getInt("idx");
+					String tempName = rs.getString("name");
+					System.out.println(num + " : " + tempName);
+				}
+			} catch (SQLException ee) {
+				System.err.println("실행결과 획득실패!!");
+			}
+			// 5. Close 작업
+			try {
+				rs.close();
+				pstmt.close();
+				stmt.close();
+				if (conn != null) {
+					if (!conn.isClosed()) {
+						conn.close();
+					}
+					conn = null;
+				}
+			} catch (SQLException ee) {
+				System.err.println("닫기 실패~!!");
+			}
+			
+		
+		}
+	}

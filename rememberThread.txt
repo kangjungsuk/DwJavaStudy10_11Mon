@@ -1,0 +1,88 @@
+package javastudy;
+
+import java.util.Scanner;
+
+public class test11 {
+
+	public static void main(String[] args) {
+		
+		Car car = new Car();
+		Car t = new Car();
+		t.start();
+	}
+
+}
+class Car extends Thread
+{
+	
+	Scanner sc = new Scanner(System.in);
+	boolean Move = false;
+	int select;
+	int gas = 10000;
+	
+	
+	Car()
+	{
+		start();//쓰레드 미리 실행.
+			while(true)
+			{
+				System.out.println("1.주행한다/2.멈춘다/3.종료");
+				System.out.print("선택:");
+				select =sc.nextInt();
+				if(select==1) 
+				{
+					Move = true;
+				}
+				else if(select==2) 
+				{
+					
+					stopMove();
+				}
+				else if(select==3) 
+				{
+					System.out.println("프로그램종료");
+					break;
+				}
+				
+			}
+	}
+
+	void move()
+	{
+		System.out.println("주행중입니다. 현재연료"+gas);
+	}
+	void stopMove()
+	{
+		Move = false;
+		System.out.println("주행정지!!! 현재연료"+gas);
+		
+		
+	}
+	
+	public void run() 
+	{
+		System.out.println("주행이시작 되었습니다.");
+		while(true) 
+		{
+					try 
+					{
+						Thread.sleep(1000);
+							if(Move ==true)
+							{
+								if(gas > 0) 
+								{
+									gas-=100;
+									move();
+								}
+								else {System.out.println("연료부족!! 남은연료:"+gas);}
+							}
+					} 
+					catch (InterruptedException e) 
+					{
+						e.printStackTrace();
+					}
+			
+		}
+	}
+	
+}

@@ -1,0 +1,73 @@
+package javastudy;
+
+import java.util.Scanner;
+
+public class test7 {
+
+	public static void main(String[] args) {
+		Fruit2 a = new Fruit2();
+		
+		}
+
+}
+class Fruit2{
+	static Scanner sc = new Scanner(System.in);
+	
+	static int fruitCnt[] = new int[5];
+	static int fruitPrice[] = new int[5];
+	static String fruitName[] = new String[5];
+	
+	int select = 0;
+	
+	Fruit2() {
+		
+		while(true) {
+			
+			System.out.println("1.과일정보보기");
+			System.out.println("2.과일정보입력");
+			System.out.println("3.종료");
+			System.out.println("숫자를 입력해주세요:");
+			select = sc.nextInt();
+		
+			if(select ==1) {
+				String ho= show();//전달값 x 반환 o
+				System.out.println(ho);
+			}
+			else if(select ==2) {
+				int aa =Input(100000);//전달값 ㅇ 반환o
+				System.out.println("남은 금액 "+aa+"원 입니다.");
+			}	
+			else if(select ==3) {
+				System.out.println("프로그램종료");
+				break;
+			}
+		
+		}
+	}
+	
+	static String show(){
+		for(int k = 0;k<fruitName.length;k++) {
+			System.out.print("과일:"+fruitName[k]+"/");
+			System.out.print("갯수:"+fruitCnt[k]+"/");
+			System.out.print("가격:"+fruitPrice[k]+"/");
+			System.out.println("");
+		}
+		System.out.println("");
+		return "쇼핑 종료.";
+	}		
+	
+	 static int Input(int a) {
+		int fTotal= 0;//총 과일 가격.
+		int result = 0;//차감 결과 값.
+		System.out.println("====캐취충전====\n"+a+"원!!!!\n"+"기둥뽑아봐?");
+		for(int k = 0;k<fruitName.length;k++) {
+			System.out.print(k+1+"번째 이름:"); fruitName[k] = sc.next();
+			System.out.print(k+1+"번째 갯수:"); fruitCnt[k] = sc.nextInt();
+			System.out.print(k+1+"번째 가격:");fruitPrice[k] = sc.nextInt();
+			fTotal += fruitPrice[k];
+			result = a-fTotal;
+			
+		}
+		return result;
+	}
+}

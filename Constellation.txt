@@ -1,0 +1,133 @@
+package javastudy;
+
+import java.util.Scanner;
+
+public class test1 {
+
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		int mon = 0;
+		int day = 0;
+		int select = 0;
+
+		while (true) {
+			System.out.println("1.생년월일입력/2.날짜비교&자리출력/3.종료");
+			select = sc.nextInt();
+			if (select == 1) {
+
+				while (true) {
+					System.out.println("월을 입력해수세요:");
+					mon = sc.nextInt();
+					System.out.println("일을 입력해수세요:");
+					day = sc.nextInt();
+
+					if (mon > 0 && mon <= 12) {
+
+						if (day > 0 && day <= 31) {
+							System.out.println("입력이 완료 되었습니다.");
+							break;
+						} else {
+							System.out.println("일이 잘못 입력되었습니다.");
+						}
+					} else {
+						System.out.println("달 이 잘못 입력되었습니다.");
+					}
+				}
+
+			} else if (select == 2) {
+				switch (mon) {
+				case 1:
+					if (day >= 20 && day <= 31) {
+						System.out.println("물병자리 입니다.");
+
+					} else if (day >= 1 && day <= 19) {
+						System.out.println("염소자리 입니다.");
+					}
+					break;
+				case 2:
+					if (day >= 1 && day <= 18) {
+						System.out.println("물병자리 입니다.");
+					} else if (day >= 19 && day <= 28) {
+						System.out.println(" 물고기자리 입니다.");
+					}
+					break;
+				case 3:
+					if (day >= 1 && day <= 20) {
+						System.out.println("물고기자리 입니다.");
+					} else if (day >= 21 && day <= 31) {
+						System.out.println("양 자리 입니다.");
+					}
+					break;
+				case 4:
+					if (day >= 1 && day <= 19) {
+						System.out.println("양 자리 입니다.");
+					} else if (day >= 20 && day <= 30) {
+						System.out.println("황소자리 입니다.");
+					}
+					break;
+				case 5:
+					if (day >= 1 && day <= 20) {
+						System.out.println("황소자리 입니다.");
+					} else if (day >= 21 && day <= 31) {
+						System.out.println("쌍둥이자리 입니다.");
+					}
+					break;
+				case 6:
+					if (day >= 1 && day <= 21) {
+						System.out.println("쌍둥이자리 입니다.");
+					} else if (day >= 22 && day <= 30) {
+						System.out.println("게자리 입니다.");
+					}
+					break;
+				case 7:
+					if (day >= 1 && day <= 22) {
+						System.out.println("게자리 입니다.");
+					} else if (day >= 23 && day <= 31) {
+						System.out.println("사자자리 입니다.");
+					}
+					break;
+				case 8:
+					if (day >= 1 && day <= 22) {
+						System.out.println("사자자리 입니다.");
+					} else if (day >= 23 && day <= 31) {
+						System.out.println("처녀자리 입니다.");
+					}
+					break;
+				case 9:
+					if (day >= 1 && day <= 23) {
+						System.out.println("처녀자리 입니다.");
+					} else if (day >= 24 && day <= 30) {
+						System.out.println("천칭자리 입니다.");
+					}
+					break;
+				case 10:
+					if (day >= 1 && day <= 22) {
+						System.out.println("천칭자리 입니다.");
+					} else if (day >= 23 && day <= 31) {
+						System.out.println("전갈자리 입니다.");
+					}
+					break;
+				case 11:
+					if (day >= 1 && day <= 22) {
+						System.out.println("전갈자리 입니다.");
+					} else if (day >= 23 && day <= 30) {
+						System.out.println("사수자리 입니다.");
+					}
+					break;
+				case 12:
+					if (day >= 1 && day <= 24) {
+						System.out.println("사수자리 입니다.");
+					} else if (day >= 25 && day <= 31) {
+						System.out.println("염소자리 입니다.");
+					}
+					break;
+
+				}
+			} else if (select == 3) {
+				System.out.println("끝");
+				break;
+			}
+
+		}
+	}
+}

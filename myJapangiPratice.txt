@@ -1,0 +1,686 @@
+package javastudy;
+
+import java.awt.Button;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Frame;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.Label;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+public class Japangi5 extends Frame implements ActionListener, Runnable{
+	private Dimension dimen, dimen1;
+	private int xpos, ypos;
+	
+	//-------------------------------------------
+	// 데이타베이스와 연동해서 값을 저장할 변수들 선언..
+	
+	//내부 처리변수
+	int coin = 0 ; //현재 금액
+	int jandon = 0; //상품구매후 받을 금액
+	int drtot = 0;//선택한 상품들의 총합 금액
+	
+	//상품금액들
+	int coffeePrice = 1000;
+	int milkPrice = 500;
+	int yulmuPrice = 700;
+	int orangePrice = 2000;
+	int hongteaPrice = 800;
+	int waterPrice = 1000;
+	
+	//상품수량
+	int cntItem1=0;
+	int cntItem2=0;
+	int cntItem3=0;
+	int cntItem4=0;
+	int cntItem5=0;
+	int cntItem6=0;
+	
+	//-------------------------------------------
+	
+	
+	//이미지 버퍼링으로 부드러운 효과 깜빡임 제거 변수
+	Image buffImg;
+	Graphics buffG;
+	
+	//상품이 제조되는 과정을 스레드 플래그처리
+	static boolean COFFEE = false;
+	static boolean MILK = false;
+	static boolean YULMU = false;
+	static boolean ORANGE = false;
+	static boolean HONG = false;
+	static boolean WATER = false;
+	
+	static boolean titleCheck=true;
+	static boolean item1SellCheck=true;
+	static boolean item2SellCheck=true;
+	static boolean item3SellCheck=true;
+	static boolean item4SellCheck=true;
+	static boolean item5SellCheck=true;
+	static boolean item6SellCheck=true;
+	//레이아웃
+	static Label lbTitle = new Label("             자바 자판기 Ver0.4");
+	Label lbCoffee = new Label("커피");
+	Label lbMilk = new Label("우유");
+	Label lbYulmu = new Label("율무차");
+	Label lbOrange = new Label("쥬스");
+	Label lbHongTea = new Label("홍차");
+	Label lbWater = new Label("생수");
+	Label lbInsertCoin = new Label("< 투입금액 >");
+	Label lbNowCoin = new Label("투입금액 :");
+	Label lbNowCoin2 = new Label("0원");
+	Label lbMsg = new Label("메세지 : ");
+	static Label lbMsg2 = new Label("대기중...");
+	Label lbJandon = new Label("잔 돈 : ");
+	Label lbJandon2 = new Label("0원");
+	
+	static Label lbHot1 = new Label("Hot!");	
+	static Label lbHot2 = new Label("Cool!");	
+	static Label lbHot3 = new Label("Hot!");	
+	static Label lbHot4 = new Label("Cool!");	
+	static Label lbHot5 = new Label("Hot!");	
+	static Label lbHot6 = new Label("Cool!");
+	
+	
+	Label lbItem1Title = new Label("수량 : ");
+	Label lbItem2Title = new Label("수량 : ");
+	Label lbItem3Title = new Label("수량 : ");
+	Label lbItem4Title = new Label("수량 : ");
+	Label lbItem5Title = new Label("수량 : ");
+	Label lbItem6Title = new Label("수량 : ");
+	Label lbCntItem1 = new Label("1잔");
+	Label lbCntItem2 = new Label("2잔");
+	Label lbCntItem3 = new Label("3잔");
+	Label lbCntItem4 = new Label("4잔");
+	Label lbCntItem5 = new Label("5잔");
+	Label lbCntItem6 = new Label("6잔");
+	
+	
+	Button btnCoffee = new Button("1000");
+	Button btnMilk = new Button("500");
+	Button btnYulmu = new Button("700");
+	Button btnOrange = new Button("2000");
+	Button btnHongTea = new Button("800");
+	Button btnWater = new Button("1000");
+	Button btnCoin10000 = new Button("10000");
+	Button btnCoin5000 = new Button("5000");
+	Button btnCoin1000 = new Button("1000");
+	
+	Button btnCancel = new Button("반환");
+
+	
+	//자판기에서 사용할 이미지 6개
+	static Image imgCoffee = Toolkit.getDefaultToolkit().getImage("coffee.jpg");
+	static Image imgMilk = Toolkit.getDefaultToolkit().getImage("milk.jpg");
+	static Image imgYulmu = Toolkit.getDefaultToolkit().getImage("yulmu.jpg");
+	static Image imgOrange = Toolkit.getDefaultToolkit().getImage("orange.jpg");
+	static Image imgHongTea = Toolkit.getDefaultToolkit().getImage("hong.jpg");
+	static Image imgWater = Toolkit.getDefaultToolkit().getImage("water.jpg");
+	
+	
+	
+	Japangi5()
+	{
+		super("자바공부");
+		this.centerXYSet(); // 센터배치를 위해서 메서드로 정리
+		
+		this.init(); //화면구성 메서드호출
+		this.dbCon(); //디비 연동 및 값을 가져오기
+		this.start(); //이벤트및스레드등 호출		
+		
+		
+	}	
+	void dbCon()
+	{
+		DbProc dbp = new DbProc();
+		
+		//테이블명을 전달값으로 주고 수량을 배열로 받아와서 저장
+		String cntItem[] = new String[6];
+		cntItem = (String[]) dbp.select("japangi_item");
+		
+		
+		//파싱작업... 내부클래스변수에 디비값을 가져와서 가공해서 저장.
+		cntItem1 = Integer.parseInt(cntItem[0]); 
+		cntItem2 = Integer.parseInt(cntItem[1]);
+		cntItem3 = Integer.parseInt(cntItem[2]);
+		cntItem4 = Integer.parseInt(cntItem[3]);
+		cntItem5 = Integer.parseInt(cntItem[4]);
+		cntItem6 = Integer.parseInt(cntItem[5]);		
+		cnt_load();		
+		
+		System.out.println("현재 커피수량 : " + cntItem1);
+		System.out.println("현재 우유수량 : " + cntItem2);
+		System.out.println("현재 율무수량 : " + cntItem3);
+		System.out.println("현재 쥬스수량 : " + cntItem4);
+		System.out.println("현재 홍차수량 : " + cntItem5);
+		System.out.println("현재 생수수량 : " + cntItem6);
+	}
+	void cnt_load()
+	{
+		//상품수량 최종 값을 가져와서 출력
+		lbCntItem1.setText(cntItem1+"잔");
+		lbCntItem2.setText(cntItem2+"잔");
+		lbCntItem3.setText(cntItem3+"잔");
+		lbCntItem4.setText(cntItem4+"잔");
+		lbCntItem5.setText(cntItem5+"잔");
+		lbCntItem6.setText(cntItem6+"개");
+	}
+	void centerXYSet()
+	{
+		this.setSize(800, 1000);
+		dimen = Toolkit.getDefaultToolkit().getScreenSize();
+		dimen1 = this.getSize();
+		xpos = (int) (dimen.getWidth() / 2 - dimen1.getWidth() / 2);
+		ypos = (int) (dimen.getHeight() / 2 - dimen1.getHeight() / 2);		
+		this.setLocation(xpos, ypos);
+		this.setVisible(true);
+	}
+	public void paint(Graphics g) {
+		buffImg = createImage(getWidth(),getHeight()); // 버퍼링용 이미지 ( 도화지 )
+		buffG = buffImg.getGraphics();
+		g.drawImage(imgCoffee, 50, 100, 170, 170, this);
+		g.drawImage(imgMilk, 300, 100, 170, 170, this);
+		g.drawImage(imgYulmu, 550, 100, 170, 170, this);
+		g.drawImage(imgOrange, 50, 420, 170, 170, this);
+		g.drawImage(imgHongTea, 300, 420, 170, 170, this);
+		g.drawImage(imgWater, 550, 420, 170, 170, this);
+		update(g);
+	}
+    @Override
+    public void update(Graphics g) {
+        buffG.clearRect(0, 0, 800, 950); // 백지화
+        buffG.drawImage(imgCoffee, 50, 100, 170, 170, this); 
+        buffG.drawImage(imgMilk, 300, 100, 170, 170, this);
+        buffG.drawImage(imgYulmu, 550, 100, 170, 170, this);
+        buffG.drawImage(imgOrange, 50, 420, 170, 170, this);
+        buffG.drawImage(imgHongTea, 300, 420, 170, 170, this);
+        buffG.drawImage(imgWater, 550, 420, 170, 170, this);
+        g.drawImage(buffImg,0,0,this); 
+        // 화면g애 버퍼(buffG)에 그려진 이미지(buffImg)옮김. ( 도화지에 이미지를 출력 )
+        repaint();
+    }
+	void init()
+	{
+		//앱솔루트 셋팅을 위해 null셋팅
+		this.setLayout(null);	
+		Font fontTitle = new Font("궁서", Font.BOLD, 20); 
+		Font fontItem = new Font("궁서", Font.BOLD, 25); 	
+		Font fontHot = new Font("궁서", Font.BOLD, 25);	
+		
+		
+		lbTitle.setBounds(250, 35, 300, 30);  this.add(lbTitle);
+		lbTitle.setFont(fontTitle);	
+		
+		//커피
+		lbHot1.setBounds(55, 60, 160, 40);  this.add(lbHot1);
+		lbHot1.setFont(fontHot);	lbHot1.setBackground(Color.RED);
+		lbCoffee.setBounds(50, 280, 50, 40);  this.add(lbCoffee);
+		lbCoffee.setFont(fontItem);	
+		
+		lbItem1Title.setBounds(50, 320, 100, 40);  this.add(lbItem1Title);
+		lbItem1Title.setFont(fontItem);	
+		lbCntItem1.setBounds(160, 320, 100, 40);  this.add(lbCntItem1);
+		lbCntItem1.setFont(fontItem);
+		
+		btnCoffee.setBounds(120, 280, 100, 40);  this.add(btnCoffee);
+		btnCoffee.setFont(fontItem);
+		
+		//우유
+		lbHot2.setBounds(305, 60, 160, 40);  this.add(lbHot2);
+		lbHot2.setFont(fontHot);	lbHot2.setBackground(Color.CYAN);
+		
+		lbMilk.setBounds(300, 280, 50, 40);  this.add(lbMilk);
+		lbMilk.setFont(fontItem);
+		lbItem2Title.setBounds(300, 320, 100, 40);  this.add(lbItem2Title);
+		lbItem2Title.setFont(fontItem);	
+		lbCntItem2.setBounds(410, 320, 100, 40);  this.add(lbCntItem2);
+		lbCntItem2.setFont(fontItem);	
+		
+		btnMilk.setBounds(370, 280, 100, 40);  this.add(btnMilk);
+		btnMilk.setFont(fontItem);
+		
+		//율무
+		lbHot3.setBounds(555, 60, 160, 40);  this.add(lbHot3);
+		lbHot3.setFont(fontHot);	lbHot3.setBackground(Color.RED);
+		
+		lbYulmu.setBounds(550, 280, 50, 40);  this.add(lbYulmu);
+		lbYulmu.setFont(fontItem);	
+		lbItem3Title.setBounds(550, 320, 100, 40);  this.add(lbItem3Title);
+		lbItem3Title.setFont(fontItem);	
+		lbCntItem3.setBounds(660, 320, 100, 40);  this.add(lbCntItem3);
+		lbCntItem3.setFont(fontItem);
+		
+		
+		btnYulmu.setBounds(620, 280, 100, 40);  this.add(btnYulmu);
+		btnYulmu.setFont(fontItem);
+		
+		
+		//오렌지
+		lbHot4.setBounds(55, 375, 160, 40);  this.add(lbHot4);
+		lbHot4.setFont(fontHot);	lbHot4.setBackground(Color.CYAN);
+		
+		lbOrange.setBounds(50, 600, 50, 40);  this.add(lbOrange);
+		lbOrange.setFont(fontItem);	
+		lbItem4Title.setBounds(50, 640, 100, 40);  this.add(lbItem4Title);
+		lbItem4Title.setFont(fontItem);	
+		lbCntItem4.setBounds(160, 640, 100, 40);  this.add(lbCntItem4);
+		lbCntItem4.setFont(fontItem);
+		
+		
+		btnOrange.setBounds(120, 600, 100, 40);  this.add(btnOrange);
+		btnOrange.setFont(fontItem);
+		
+		//홍차
+		lbHot5.setBounds(305, 375, 160, 40);  this.add(lbHot5);
+		lbHot5.setFont(fontHot);	lbHot5.setBackground(Color.RED);
+		
+		lbHongTea.setBounds(300, 600, 50, 40);  this.add(lbHongTea);
+		lbHongTea.setFont(fontItem);
+		lbItem5Title.setBounds(300, 640, 100, 40);  this.add(lbItem5Title);
+		lbItem5Title.setFont(fontItem);	
+		lbCntItem5.setBounds(410, 640, 100, 40);  this.add(lbCntItem5);
+		lbCntItem5.setFont(fontItem);
+		
+		
+		btnHongTea.setBounds(370, 600, 100, 40);  this.add(btnHongTea);
+		btnHongTea.setFont(fontItem);
+		
+		//생수
+		lbHot6.setBounds(555, 375, 160, 40);  this.add(lbHot6);
+		lbHot6.setFont(fontHot);	lbHot6.setBackground(Color.CYAN);
+		
+		lbWater.setBounds(550, 600, 50, 40);  this.add(lbWater);
+		lbWater.setFont(fontItem);	
+		lbItem6Title.setBounds(550, 640, 100, 40);  this.add(lbItem6Title);
+		lbItem6Title.setFont(fontItem);	
+		lbCntItem6.setBounds(660, 640, 100, 40);  this.add(lbCntItem6);
+		lbCntItem6.setFont(fontItem);
+		
+		
+		btnWater.setBounds(620, 600, 100, 40);  this.add(btnWater);
+		btnWater.setFont(fontItem);
+		
+		
+		//투입금액
+		lbInsertCoin.setBounds(50, 700, 150, 40);  this.add(lbInsertCoin);
+		lbInsertCoin.setFont(fontItem);	
+		
+		btnCoin10000.setBounds(50, 740, 150, 40);  this.add(btnCoin10000);
+		btnCoin10000.setFont(fontItem);	
+		
+		btnCoin5000.setBounds(250, 740, 150, 40);  this.add(btnCoin5000);
+		btnCoin5000.setFont(fontItem);	
+		
+		btnCoin1000.setBounds(450, 740, 150, 40);  this.add(btnCoin1000);
+		btnCoin1000.setFont(fontItem);	
+		
+		
+		//투입금액
+		lbNowCoin.setBounds(50, 810, 150, 40);  this.add(lbNowCoin);
+		lbNowCoin.setFont(fontItem);	
+		
+		lbNowCoin2.setBounds(300, 810, 150, 40);  this.add(lbNowCoin2);
+		lbNowCoin2.setFont(fontItem);
+		
+		//메세지
+		lbMsg.setBounds(50, 880, 100, 40);  this.add(lbMsg);
+		lbMsg.setFont(fontItem);	
+		
+		lbMsg2.setBounds(150, 880, 250, 40);  this.add(lbMsg2);
+		lbMsg2.setFont(fontItem);
+		
+		//잔돈
+		lbJandon.setBounds(450, 810, 100, 40);  this.add(lbJandon);
+		lbJandon.setFont(fontItem);
+		
+		lbJandon2.setBounds(650, 810, 150, 40);  this.add(lbJandon2);
+		lbJandon2.setFont(fontItem);
+		
+		//반환
+		btnCancel.setBounds(450, 860, 100, 40);  this.add(btnCancel);
+		btnCancel.setFont(fontItem);
+		
+
+				
+	}	
+	void start()
+	{		
+		
+		btnCoffee.addActionListener(this);
+		btnMilk.addActionListener(this);
+		btnYulmu.addActionListener(this);
+		btnOrange.addActionListener(this);
+		btnHongTea.addActionListener(this);
+		btnWater.addActionListener(this);
+		btnCoin10000.addActionListener(this);
+		btnCoin5000.addActionListener(this);
+		btnCoin1000.addActionListener(this);
+		btnCancel.addActionListener(this);
+		
+		//윈도우우측상단 X 닫기 활성화
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				System.exit(0);
+			}
+		});
+	}
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		lbMsg2.setForeground(Color.black);//메세지 폰트색 검정으로 초기화.
+		
+		if(coin ==0)//잔돈0원일시 우선체크
+		{		
+			//상품을 선택하게되면 잔돈없어서 선택 무효처리.
+			if(e.getSource() == btnCoffee || e.getSource() == btnMilk || e.getSource() == btnYulmu ||
+					e.getSource() == btnOrange || e.getSource() == btnHongTea || e.getSource() == btnWater)
+			{
+				lbMsg2.setText("잔돈이 없습니다.");
+				return;
+			}
+			//코인 투입시에는 처리를 해야하므로.
+			else {
+				lbMsg2.setText("상품을 선택해주세요.");
+			}
+		}
+		
+		//========커피 버튼 부분========
+		if(e.getSource() == btnCoffee)
+		{						
+			if(jandon<coffeePrice)//잔액이 모자른 상황에 잔액 부족출력 후 리턴. 
+			{
+				lbMsg2.setText("=잔액이부족합니다=");
+				lbMsg2.setForeground(Color.red);
+				return;
+			}
+			lbMsg2.setText("커피선택함");
+			jandon-=coffeePrice;
+			jandon(coffeePrice);	
+			COFFEE = true; //제조이미지효과 스타트
+			cntItem1--; // 상품판매로 인한 1개 차감
+			System.out.println("현재 커피수량 : " + cntItem1);
+			cnt_load();	//차감후 현재상품 수량 로드..
+		}
+		//========우유 버튼 부분========
+		else if(e.getSource() == btnMilk)
+		{
+			if(jandon<milkPrice) 
+			{
+				lbMsg2.setText("=잔액이부족합니다="); 
+				lbMsg2.setForeground(Color.red);
+				return;
+			}
+			lbMsg2.setText("우유선택함");
+			jandon-=milkPrice;    
+			jandon(milkPrice);		
+			MILK = true;//제조이미지효과 스타트
+			cntItem2--; // 상품판매로 인한 1개 차감
+			System.out.println("현재 우유수량 : " + cntItem2);
+			cnt_load();	//차감후 현재상품 수량 로드..
+		}
+		//========율무 버튼 부분========
+		else if(e.getSource() == btnYulmu)
+		{
+			if(jandon<yulmuPrice) 
+			{
+				lbMsg2.setText("=잔액이부족합니다=");
+				lbMsg2.setForeground(Color.red);
+				return;
+			}
+			lbMsg2.setText("율무선택함");   
+			jandon-=yulmuPrice;
+			jandon(yulmuPrice);
+			YULMU = true;//제조이미지효과 스타트
+			cntItem3--; // 상품판매로 인한 1개 차감
+			System.out.println("현재 율무수량 : " + cntItem3);
+			cnt_load();	//차감후 현재상품 수량 로드..
+		}
+		//========쥬스 버튼 부분========
+		else if(e.getSource() == btnOrange)
+		{
+			if(jandon<orangePrice) 
+			{
+				lbMsg2.setText("=잔액이부족합니다=");
+				lbMsg2.setForeground(Color.red);
+				return;
+			}
+			lbMsg2.setText("쥬스선택함");   
+			jandon-=orangePrice;
+			jandon(orangePrice);
+			ORANGE = true;//제조이미지효과 스타트
+			cntItem4--; // 상품판매로 인한 1개 차감
+			System.out.println("현재 쥬스수량 : " + cntItem4);
+			cnt_load();	//차감후 현재상품 수량 로드..
+		}
+		//========홍차 버튼 부분========
+		else if(e.getSource() == btnHongTea)
+		{
+			if(jandon<hongteaPrice) 
+			{
+				lbMsg2.setText("=잔액이부족합니다=");
+				lbMsg2.setForeground(Color.red);
+				return;
+			}
+			lbMsg2.setText("홍차선택함");   
+			jandon-=hongteaPrice;
+			jandon(hongteaPrice);
+			HONG = true;//제조이미지효과 스타트
+			cntItem5--; // 상품판매로 인한 1개 차감
+			System.out.println("현재 홍차수량 : " + cntItem5);
+			cnt_load();	//차감후 현재상품 수량 로드..
+		}
+		else if(e.getSource() == btnWater)
+		{
+			if(jandon<waterPrice) 
+			{
+				lbMsg2.setText("=잔액이부족합니다=");
+				lbMsg2.setForeground(Color.red);
+				return;
+			}
+			lbMsg2.setText("생수선택함");   
+			jandon-=hongteaPrice;
+			jandon(waterPrice);
+			WATER = true;//제조이미지효과 스타트
+			cntItem6--; // 상품판매로 인한 1개 차감
+			System.out.println("현재 생수수량 : " + cntItem6);
+			cnt_load();	//차감후 현재상품 수량 로드..
+		}
+		else if(e.getSource() == btnCancel)
+		{
+			if(jandon > 0)
+			{
+				coin = 0;
+				jandon = 0;
+				drtot = 0;
+				lbMsg2.setText("==잔돈이 반환됨=="); 
+				lbNowCoin2.setText(coin+"원");	
+				lbJandon2.setText(jandon+"원");
+				return;
+			}
+			else if(jandon < 0)
+			{
+				lbMsg2.setText("=잔액이부족합니다=");
+				lbMsg2.setForeground(Color.red);
+				coin = 0;
+				jandon = 0;
+				drtot = 0;
+				lbNowCoin2.setText(coin+"원");	
+				lbJandon2.setText(jandon+"원");
+				return;
+			}
+			else if(jandon==0) 
+			{
+				lbMsg2.setText("=반환잔액없음=");
+			}
+		}
+		else if(e.getSource() == btnCoin10000)
+		{	
+			coin += 10000;   jandon += 10000;}
+		else if(e.getSource() == btnCoin5000)
+		{
+			coin += 5000;    jandon += 5000;}
+		else if(e.getSource() == btnCoin1000)
+		{
+			coin += 1000;    jandon +=1000;}
+		
+		lbNowCoin2.setText(coin+"원");	
+		lbJandon2.setText(jandon+"원");	
+	}
+	
+	void jandon(int price)
+	{
+		drtot+= price;
+		jandon = coin - drtot;
+		lbJandon2.setText(jandon+"원");
+	}
+	@Override
+	public void run() {
+		
+		while(true)
+		{
+			if(MILK == true)
+			{
+				imgMilk = Toolkit.getDefaultToolkit().getImage("milk2.gif"); 		
+				System.out.println("우유제조중");
+				//this.repaint();
+				try {
+					Thread.sleep(500);
+					lbMsg2.setText("제조중");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중.");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중..");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중...");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중....");
+					Thread.sleep(500);
+					lbMsg2.setText("상품이 나왔습니다.");
+					Thread.sleep(1000);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}		
+				imgMilk = Toolkit.getDefaultToolkit().getImage("milk.jpg"); 
+				//this.repaint();
+				MILK = false;
+			}
+			if(YULMU == true)
+			{
+				imgYulmu = Toolkit.getDefaultToolkit().getImage("yulmu2.gif"); 		
+				System.out.println("율무제조중");
+				this.repaint();
+				try {
+					Thread.sleep(500);
+					lbMsg2.setText("제조중");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중.");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중..");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중...");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중....");
+					Thread.sleep(500);
+					lbMsg2.setText("상품이 나왔습니다.");
+					Thread.sleep(1000);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}		
+				imgYulmu = Toolkit.getDefaultToolkit().getImage("yulmu.jpg"); 
+				this.repaint();
+				YULMU = false;
+			}
+			if(ORANGE == true)
+			{
+				imgOrange = Toolkit.getDefaultToolkit().getImage("orange2.gif"); 		
+				System.out.println("오렌지쥬스제조중");
+				this.repaint();
+				try {
+					Thread.sleep(500);
+					lbMsg2.setText("제조중");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중.");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중..");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중...");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중....");
+					Thread.sleep(500);
+					lbMsg2.setText("상품이 나왔습니다.");
+					Thread.sleep(1000);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}		
+				imgOrange = Toolkit.getDefaultToolkit().getImage("orange.jpg"); 
+				this.repaint();
+				ORANGE = false;
+			}
+			if(HONG == true)
+			{
+				imgHongTea = Toolkit.getDefaultToolkit().getImage("hong2.gif"); 		
+				System.out.println("홍차제조중");
+				this.repaint();
+				try {
+					Thread.sleep(500);
+					lbMsg2.setText("제조중");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중.");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중..");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중...");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중....");
+					Thread.sleep(500);
+					lbMsg2.setText("상품이 나왔습니다.");
+					Thread.sleep(1000);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}		
+				imgHongTea = Toolkit.getDefaultToolkit().getImage("hong.jpg"); 
+				 
+				HONG = false;
+			}
+			if(WATER == true)
+			{
+				imgWater = Toolkit.getDefaultToolkit().getImage("water2.gif"); 		
+				System.out.println("생수제조중");
+				
+				try {
+					Thread.sleep(500);
+					lbMsg2.setText("제조중");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중.");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중..");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중...");
+					Thread.sleep(500);
+					lbMsg2.setText("제조중....");
+					Thread.sleep(500);
+					lbMsg2.setText("상품이 나왔습니다.");
+					Thread.sleep(1000);
+				} catch (InterruptedException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}		
+				imgWater = Toolkit.getDefaultToolkit().getImage("water.jpg"); 
+				
+				WATER = false;
+			}
+		}
+		
+	}
+
+	
+}
